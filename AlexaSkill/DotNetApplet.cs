@@ -12,6 +12,7 @@ using Safern.Hub;
 using System.Threading;
 using Safern.Hub.Sender;
 using Safern.Hub.Devices;
+using Microsoft.ApplicationInsights;
 
 namespace AlexaSkill
 {
@@ -105,8 +106,17 @@ namespace AlexaSkill
 
             var intent = intentRequest.Intent;
             var intentName = intent?.Name;
-
-            string userId = GetUserIdFromSession(session.User.AccessToken);
+            string userId;
+            try
+            {
+                userId = GetUserIdFromSession(session.User.AccessToken);
+            }
+            catch (Exception e)
+            {
+                var ai = new TelemetryClient();
+                ai.TrackException(e);
+                throw;
+            }
 
             if (GetSensorStateIntentName.Equals(intentName))
             {

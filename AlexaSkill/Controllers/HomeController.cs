@@ -9,6 +9,7 @@ using Microsoft.Extensions.Primitives;
 using System.IO;
 using Microsoft.AspNetCore.Mvc.WebApiCompatShim;
 using System.Diagnostics;
+using Microsoft.ApplicationInsights;
 
 namespace AlexaSkill.Controllers
 {
@@ -20,7 +21,17 @@ namespace AlexaSkill.Controllers
         {
             var speechlet = new DotNetApplet();
             var message = Request.HttpContext.GetHttpRequestMessage();
-            var response = await speechlet.GetResponseAsync(message);
+            HttpResponseMessage response;
+            try
+            {
+                response = await speechlet.GetResponseAsync(message);
+            }
+            catch (Exception e)
+            {
+                var ai = new TelemetryClient();
+                ai.TrackException(e);
+                throw;
+            }
             return Ok(await response.Content.ReadAsStreamAsync());
         }
     }
